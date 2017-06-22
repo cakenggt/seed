@@ -289,16 +289,16 @@ seed.dig_plant = function(pos, node, player)
 	local base_rarity = 8 - (step - 1) * 7 / (steps - 1)
 	local item_meta = minetest.serialize({item=seed_item})
 	if math.random(base_rarity) == 1 then
-		add_to_player_inventory(player, seed_item)
+		add_to_player_inventory(player, seed_item, pos)
 	end
 	if math.random(base_rarity*2) == 1 then
-		add_to_player_inventory(player, seed_item)
+		add_to_player_inventory(player, seed_item, pos)
 	end
 	if math.random(base_rarity) == 1 then
-		add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta})
+		add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta}, pos)
 	end
 	if math.random(base_rarity*2) == 1 then
-		add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta})
+		add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta}, pos)
 	end
 	minetest.remove_node(pos)
 end
@@ -311,12 +311,12 @@ seed.dig_seed = function(pos, node, player)
 		return
 	end
 	local item_meta = minetest.serialize({item=seed_item})
-	add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta})
+	add_to_player_inventory(player, {name="seed:seed_seed", count=1, metadata=item_meta}, pos)
 	minetest.remove_node(pos)
 end
 
-function add_to_player_inventory(player, itemstack)
+function add_to_player_inventory(player, itemstack, pos)
 	local player_inv = player:get_inventory()
 	local dropped = player_inv:add_item("main", itemstack)
-	minetest.add_item(player:getpos(), dropped)
+	minetest.add_item(pos, dropped)
 end
