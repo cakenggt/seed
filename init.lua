@@ -9,8 +9,8 @@ dofile(seed.path .. "/api.lua")
 minetest.register_node("seed:seed_seed_blank", {
 	description = "Blank Seed",
 	tiles = {"seed_seed_seed_blank.png"},
-	inventory_image = "seed_seed_seed_blank.png",
-	wield_image = "seed_seed_seed_blank.png",
+	inventory_image = "seed_seed_seed_blank_item.png",
+	wield_image = "seed_seed_seed_blank_item.png",
 	drawtype = "plantlike",
 	groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2},
 	paramtype = "light",
@@ -51,47 +51,56 @@ seed.register_plant("seed:seed", {
 	groups = {flammable = 4},
 })
 
-minetest.register_craft_predict(function(itemstack, player, old_craft_grid, craft_inv)
-	local continue = false
+function validate_seed_craft(old_craft_grid)
+	local seed
+	local seed_index
 	local copy
 	local copy_index
-	for i = 1, player:get_inventory():get_size("craft") do
+	for i = 1, #old_craft_grid do
 		if old_craft_grid[i]:get_name() == "seed:seed_seed_blank" then
-			continue = true
+			if seed ~= nil then
+				-- error
+				return nil
+			end
+			seed = old_craft_grid[i]
+			seed_index = i
 		elseif old_craft_grid[i]:get_name() ~= "" then
+			if copy ~= nil then
+				-- error
+				return nil
+			end
 			copy = old_craft_grid[i]
 			copy_index = i
 		end
 	end
-	if continue and copy ~= nil then
-		return ItemStack({name="seed:seed_seed", count=1, metadata=minetest.serialize({item=copy:get_name()})})
+	if seed ~= nil and copy ~= nil then
+		return {
+			seed=seed,
+			seed_index=seed_index,
+			copy=copy,
+			copy_index=copy_index
+		}
+	else
+		return nil
+	end
+end
+
+minetest.register_craft_predict(function(itemstack, player, old_craft_grid, craft_inv)
+	if validate_seed_craft(old_craft_grid) ~= nil then
+		return ItemStack({name="seed:seed_seed", count=1})
 	end
 	return nil
 end)
 
 minetest.register_on_craft(function(itemstack, player, old_craft_grid, craft_inv)
-	local continue = false
-	local seed
-	local seed_index
-	local copy
-	local copy_index
-	for i = 1, player:get_inventory():get_size("craft") do
-		if old_craft_grid[i]:get_name() == "seed:seed_seed_blank" then
-			continue = true
-			seed = old_craft_grid[i]
-			seed_index = i
-		elseif old_craft_grid[i]:get_name() ~= "" then
-			copy = old_craft_grid[i]
-			copy_index = i
-		end
-	end
-	if continue and copy ~= nil then
-		local copy_name = copy:get_name()
-		copy:take_item()
-		seed:take_item()
+	local validate_result = validate_seed_craft(old_craft_grid)
+	if validate_result ~= nil then
+		local copy_name = validate_result.copy:get_name()
+		validate_result.copy:take_item()
+		validate_result.seed:take_item()
 		-- put back any leftover items
-		craft_inv:set_stack("craft", copy_index, copy)
-		craft_inv:set_stack("craft", seed_index, seed)
+		craft_inv:set_stack("craft", validate_result.copy_index, validate_result.copy)
+		craft_inv:set_stack("craft", validate_result.seed_index, validate_result.seed)
 		return ItemStack({name="seed:seed_seed", count=1, metadata=minetest.serialize({item=copy_name})})
 	end
 	return nil
