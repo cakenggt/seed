@@ -7,7 +7,7 @@ Version: 1.0
 License: LGPL 2.1 or later
 Dependencies: default mod (found in minetest_game)
 
-Report bugs or request help on [github](https://github.com/cakenggt/seed/issues).
+Report bugs or request help here: https://github.com/cakenggt/seed/issues
 
 Installation
 ------------
